@@ -3,7 +3,7 @@ pipeline {
 
     tools {
         gradle 'gradle-8'   // must match name in Global Tool Config
-        jdk 'JDK21'         // or 'jdk17' if you later add it
+        jdk 'jdk17'         // or 'jdk17' if you later add it
     }
 
     stages {
