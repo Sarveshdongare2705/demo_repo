@@ -1,30 +1,39 @@
 pipeline {
     agent any
 
-    tools {
-        gradle 'gradle-8'   // must match name in Global Tool Config
-        jdk 'jdk17'         // or 'jdk17' if you later add it
+    parameters {
+        string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Git branch to build')
+        booleanParam(name: 'RUN_SONAR', defaultValue: true, description: 'Run SonarQube analysis?')
+        choice(name: 'ENVIRONMENT', choices: ['dev', 'qa', 'prod'], description: 'Deployment environment')
     }
 
     stages {
         stage('Checkout') {
-    steps {
-        git branch: 'main', url: 'https://github.com/Sarveshdongare2705/demo_repo.git'
-    }
-}
+            steps {
+                git branch: "${params.BRANCH_NAME}", url: 'https://github.com/Sarveshdongare2705/demo_repo.git'
+            }
+        }
 
         stage('Build') {
             steps {
-                sh 'chmod +x gradlew'
                 sh './gradlew clean build'
             }
         }
 
         stage('SonarQube Analysis') {
+            when {
+                expression { params.RUN_SONAR }
+            }
             steps {
-                withSonarQubeEnv('SonarQubeLocal') {  // name must match the SonarQube server ID in Jenkins
-                    sh './gradlew sonarqube'
+                withSonarQubeEnv('SonarQubeLocal') {
+                    sh './gradlew sonar'
                 }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo "Deploying to ${params.ENVIRONMENT}"
             }
         }
     }
