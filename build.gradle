@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '2.6.6'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
-    id "org.sonarqube" version "3.3"
+    id "org.sonarqube" version "3.0"
 }
 
 group = 'com.example'
@@ -31,7 +31,7 @@ sonarqube {
         property "sonar.tests", "src/test/java"
         property "sonar.coverage.exclusions", ""
         property "sonar.host.url", "http://localhost:9000/"
-        property "sonar.login", "squ_b7dd1f29a64b2413b8bc3a0e3523774af1a5d208"
+        property "sonar.login", "c51865d238d4ed803588b42f12650f89094bc06c"
     }
 }
 
