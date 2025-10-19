@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    tools {
+        jdk 'jdk8' // Default JDK for build etc.
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -22,6 +26,9 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
+            tools {
+                jdk 'jdk11' // Switch to Java 11 for this stage
+            }
             steps {
                 echo "==== SonarQube Analysis Stage ===="
                 sh 'echo Switching to Java 11 for SonarQube'
