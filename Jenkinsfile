@@ -8,10 +8,10 @@ pipeline {
 
     stages {
         stage('Checkout') {
-            steps {
-                git 'https://github.com/Sarveshdongare2705/demo_repo.git'
-            }
-        }
+    steps {
+        git branch: 'main', url: 'https://github.com/Sarveshdongare2705/demo_repo.git'
+    }
+}
 
         stage('Build') {
             steps {
