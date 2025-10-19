@@ -2,18 +2,14 @@ pipeline {
     agent any
 
     tools {
-        gradle 'gradle-8'  // <-- name must match the Gradle tool you configured in Jenkins
-        jdk 'jdk17'         // <-- name must match your JDK tool config
-    }
-
-    environment {
-        SONARQUBE_ENV = credentials('sonarqube-token') // Jenkins credential ID
+        gradle 'gradle-8'   // must match name in Global Tool Config
+        jdk 'JDK21'         // or 'jdk17' if you later add it
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/<your-username>/<your-repo>.git'
+                git 'https://github.com/Sarveshdongare2705/demo_repo.git'
             }
         }
 
@@ -25,13 +21,12 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('local-sonar') {
+                withSonarQubeEnv('local-sonar') {  // name must match the SonarQube server ID in Jenkins
                     sh """
                         ./gradlew sonarqube \
-                            -Dsonar.projectKey=demo \
-                            -Dsonar.projectName=demo \
-                            -Dsonar.host.url=http://localhost:9000 \
-                            -Dsonar.login=${SONARQUBE_ENV}
+                          -Dsonar.projectKey=demo \
+                          -Dsonar.projectName=demo \
+                          -Dsonar.host.url=http://localhost:9000
                     """
                 }
             }
