@@ -26,9 +26,8 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-            environment {
-                JAVA_HOME = tool(name: 'jdk11', type: 'jdk')
-                PATH = "${JAVA_HOME}/bin:${env.PATH}"
+            tools {
+                jdk 'jdk11' // Switch to Java 11 for this stage
             }
             steps {
                 echo "==== SonarQube Analysis Stage ===="
@@ -36,7 +35,7 @@ pipeline {
                 sh 'echo Current Java version:'
                 sh 'java -version'
                 withSonarQubeEnv('SonarQubeLocal') {
-                    // Double check which java is being used by Gradle itself
+                    // Verify Gradle is now using Java 11
                     sh './gradlew --version'
                     sh './gradlew sonarqube --info'
                 }
