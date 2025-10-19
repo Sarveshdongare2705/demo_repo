@@ -22,13 +22,8 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('local-sonar') {  // name must match the SonarQube server ID in Jenkins
-                    sh """
-                        ./gradlew sonarqube \
-                          -Dsonar.projectKey=demo \
-                          -Dsonar.projectName=demo \
-                          -Dsonar.host.url=http://localhost:9000
-                    """
+                withSonarQubeEnv('SonarQubeLocal') {  // name must match the SonarQube server ID in Jenkins
+                    sh './gradlew sonarqube'
                 }
             }
         }
