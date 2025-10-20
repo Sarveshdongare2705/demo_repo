@@ -30,8 +30,6 @@ sonarqube {
         property "sonar.sources", "src/main/java"
         property "sonar.tests", "src/test/java"
         property "sonar.coverage.exclusions", ""
-        property "sonar.host.url", "http://localhost:9000/"
-        property "sonar.login", "c51865d238d4ed803588b42f12650f89094bc06c"
     }
 }
 

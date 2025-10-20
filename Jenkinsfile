@@ -1,61 +1,81 @@
-pipeline {
-    agent any
+def gitBranch = env.BRANCH_NAME ?: 'main'
+def gitTag = env.TAG ? "refs/tags/${env.TAG}" : null
+def gitRef = gitTag ? gitTag : gitBranch
+def buildVersion = gitTag ? gitTag : 'snapshot'
 
-    tools {
-        jdk 'jdk8' // Default JDK for build etc.
-    }
+echo "branch = ${gitBranch}"
+echo "tag = ${gitTag}"
+echo "ref = ${gitRef}"
+echo "buildVersion = ${buildVersion}"
 
-    stages {
+node {
+    properties([
+        disableConcurrentBuilds(),
+        parameters([
+            string(name: 'BRANCH', defaultValue: 'main', description: 'Branch to build'),
+            string(name: 'TAG', defaultValue: '', description: 'Tag to build (optional)')
+        ])
+    ])
+    
+    echo sh(returnStdout: true, script: 'env')
+    
+    try {
         stage('Checkout') {
-            steps {
-                echo "==== Checkout Stage ===="
-                sh 'echo Current Java version:'
-                sh 'java -version'
-                git branch: 'main', url: 'https://github.com/Sarveshdongare2705/demo_repo.git'
-            }
+            echo "==== Checkout Stage ===="
+            echo "Checking out git ref: ${gitRef}"
+            
+            sh 'echo Current Java version:'
+            sh 'java -version'
+            
+            checkout([
+                $class: 'GitSCM',
+                branches: [[name: "${gitRef}"]],
+                doGenerateSubmoduleConfigurations: false,
+                extensions: [],
+                submoduleCfg: [],
+                userRemoteConfigs: [[
+                    url: 'https://github.com/Sarveshdongare2705/demo_repo.git'
+                ]]
+            ])
         }
-
+        
         stage('Build') {
-            steps {
-                echo "==== Build Stage ===="
-                sh 'echo Current Java version:'
-                sh 'java -version'
-                sh 'chmod +x gradlew'
-                sh './gradlew clean build'
-            }
+            echo "==== Build Stage ===="
+            sh 'echo Current Java version:'
+            sh 'java -version'
+            sh 'chmod +x gradlew'
+            sh './gradlew clean build'
         }
-
+        
         stage('SonarQube Analysis') {
-            tools {
-                jdk 'jdk11' // Switch to Java 11 for this stage
-            }
-            steps {
-                echo "==== SonarQube Analysis Stage ===="
+            echo "==== SonarQube Analysis Stage ===="
+            withEnv([
+                "JAVA_HOME=${tool name: 'jdk11', type: 'jdk'}",
+                "PATH+JAVA=${tool name: 'jdk11', type: 'jdk'}/bin"
+            ]) {
                 sh 'echo Switching to Java 11 for SonarQube'
                 sh 'echo Current Java version:'
                 sh 'java -version'
+                
                 withSonarQubeEnv('SonarQubeLocal') {
-                    // Verify Gradle is now using Java 11
                     sh './gradlew --version'
                     sh './gradlew sonarqube --info'
                 }
             }
         }
-
+        
         stage('Deploy') {
-            steps {
-                echo "==== Deploy Stage ===="
-                sh 'echo Current Java version:'
-                sh 'java -version'
-            }
-        }
-    }
-
-    post {
-        always {
-            echo "==== Pipeline Completed ===="
-            sh 'echo Final Java version:'
+            echo "==== Deploy Stage ===="
+            sh 'echo Current Java version:'
             sh 'java -version'
         }
+        
+    } catch (Exception e) {
+        currentBuild.result = 'FAILURE'
+        throw e
+    } finally {
+        echo "==== Pipeline Completed ===="
+        sh 'echo Final Java version:'
+        sh 'java -version'
     }
 }
