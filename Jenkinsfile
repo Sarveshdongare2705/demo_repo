@@ -25,12 +25,8 @@ pipeline {
                         sh 'java -version'
 
                         withSonarQubeEnv('SonarQubeLocal') {
-                            sh 'echo "SONAR_HOST_URL=$SONAR_HOST_URL"'
-                            sh 'echo "SONAR_AUTH_TOKEN=$SONAR_AUTH_TOKEN"'
-
                             // Make gradlew executable
-                            //sh 'chmod +x gradlew'
-
+                            sh 'chmod +x gradlew'
                             echo ">>> Running Gradle Sonar analysis..."
                             sh './gradlew clean build sonarqube -x test -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_AUTH_TOKEN'
                         }
