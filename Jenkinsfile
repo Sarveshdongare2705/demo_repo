@@ -1,81 +1,42 @@
-def gitBranch = env.BRANCH_NAME ?: 'main'
-def gitTag = env.TAG ? "refs/tags/${env.TAG}" : null
-def gitRef = gitTag ? gitTag : gitBranch
-def buildVersion = gitTag ? gitTag : 'snapshot'
+pipeline {
+    agent any
 
-echo "branch = ${gitBranch}"
-echo "tag = ${gitTag}"
-echo "ref = ${gitRef}"
-echo "buildVersion = ${buildVersion}"
+    stages {
 
-node {
-    properties([
-        disableConcurrentBuilds(),
-        parameters([
-            string(name: 'BRANCH', defaultValue: 'main', description: 'Branch to build'),
-            string(name: 'TAG', defaultValue: '', description: 'Tag to build (optional)')
-        ])
-    ])
-    
-    echo sh(returnStdout: true, script: 'env')
-    
-    try {
-        stage('Checkout') {
-            echo "==== Checkout Stage ===="
-            echo "Checking out git ref: ${gitRef}"
-            
-            sh 'echo Current Java version:'
-            sh 'java -version'
-            
-            checkout([
-                $class: 'GitSCM',
-                branches: [[name: "${gitRef}"]],
-                doGenerateSubmoduleConfigurations: false,
-                extensions: [],
-                submoduleCfg: [],
-                userRemoteConfigs: [[
-                    url: 'https://github.com/Sarveshdongare2705/demo_repo.git'
-                ]]
-            ])
-        }
-        
         stage('Build') {
-            echo "==== Build Stage ===="
-            sh 'echo Current Java version:'
-            sh 'java -version'
-            sh 'chmod +x gradlew'
-            sh './gradlew clean build'
-        }
-        
-        stage('SonarQube Analysis') {
-            echo "==== SonarQube Analysis Stage ===="
-            withEnv([
-                "JAVA_HOME=${tool name: 'jdk11', type: 'jdk'}",
-                "PATH+JAVA=${tool name: 'jdk11', type: 'jdk'}/bin"
-            ]) {
-                sh 'echo Switching to Java 11 for SonarQube'
-                sh 'echo Current Java version:'
-                sh 'java -version'
-                
-                withSonarQubeEnv('SonarQubeLocal') {
-                    sh './gradlew --version'
-                    sh './gradlew sonarqube --info'
+            echo "==== Build Stage (Java 8) ===="
+            steps {
+                script {
+                    // Use Java 8 for all main build tasks
+                    def javaHome8 = tool(name: 'JAVA 8', type: 'jdk')
+                    withEnv([
+                        "JAVA_HOME=${javaHome8}",
+                        "PATH+JAVA=${javaHome8}/bin"
+                    ]) {
+                        sh 'java -version'
+                        sh './gradlew clean build -x test'
+                    }
                 }
             }
         }
-        
-        stage('Deploy') {
-            echo "==== Deploy Stage ===="
-            sh 'echo Current Java version:'
-            sh 'java -version'
+
+        stage('SonarQube Analysis') {
+            echo "==== SonarQube Analysis Stage (Java 11) ===="
+            steps {
+                script {
+                    // Use Java 11 only for SonarQube
+                    def javaHome11 = tool(name: 'JAVA 11', type: 'jdk')
+                    withEnv([
+                        "JAVA_HOME=${javaHome11}/openjdk-11.0.0.2",
+                        "PATH+JAVA=${javaHome11}/openjdk-11.0.0.2/bin"
+                    ]) {
+                        sh 'java -version'
+                        withSonarQubeEnv('dev-sonarcube') {
+                            sh './gradlew sonarqube'
+                        }
+                    }
+                }
+            }
         }
-        
-    } catch (Exception e) {
-        currentBuild.result = 'FAILURE'
-        throw e
-    } finally {
-        echo "==== Pipeline Completed ===="
-        sh 'echo Final Java version:'
-        sh 'java -version'
     }
 }
