@@ -15,9 +15,12 @@ pipeline {
                         sh 'echo "Java Home: $JAVA_HOME"'
                         sh 'java -version' // confirm correct Java
                         withSonarQubeEnv('SonarQubeLocal') {
-                            sh 'chmod +x gradlew'
-                            sh './gradlew clean build sonarqube -x test'
-                        }
+    sh 'echo "SONAR_HOST_URL=$SONAR_HOST_URL"'
+    sh 'echo "SONAR_AUTH_TOKEN=$SONAR_AUTH_TOKEN"'
+    sh 'chmod +x gradlew'
+    sh './gradlew clean build sonarqube -x test -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_AUTH_TOKEN'
+}
+
                     }
                 }
             }
