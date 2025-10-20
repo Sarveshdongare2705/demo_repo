@@ -4,39 +4,72 @@ pipeline {
     stages {
 
         stage('Build') {
-            echo "==== Build Stage (Java 8) ===="
             steps {
                 script {
-                    // Use Java 8 for all main build tasks
+                    echo "==== Build Stage (Using Java 8) ===="
+                    // Use Java 8 for normal build
                     def javaHome8 = tool(name: 'JAVA 8', type: 'jdk')
                     withEnv([
                         "JAVA_HOME=${javaHome8}",
                         "PATH+JAVA=${javaHome8}/bin"
                     ]) {
+                        sh 'echo "Current JAVA_HOME: $JAVA_HOME"'
                         sh 'java -version'
-                        sh './gradlew clean build -x test'
+                        
+                        // Run your existing build command
+                        sh "./build.sh ${stageName}"
                     }
                 }
             }
         }
 
         stage('SonarQube Analysis') {
-            echo "==== SonarQube Analysis Stage (Java 11) ===="
             steps {
                 script {
-                    // Use Java 11 only for SonarQube
+                    echo "==== SonarQube Analysis Stage (Using Java 11) ===="
+                    // Use Java 11 ONLY for SonarQube analysis
                     def javaHome11 = tool(name: 'JAVA 11', type: 'jdk')
                     withEnv([
                         "JAVA_HOME=${javaHome11}/openjdk-11.0.0.2",
                         "PATH+JAVA=${javaHome11}/openjdk-11.0.0.2/bin"
                     ]) {
+                        sh 'echo "Current JAVA_HOME: $JAVA_HOME"'
                         sh 'java -version'
+
                         withSonarQubeEnv('dev-sonarcube') {
                             sh './gradlew sonarqube'
                         }
                     }
                 }
             }
+        }
+
+        stage('Release') {
+            steps {
+                script {
+                    echo "==== Release Stage (Using Java 8) ===="
+                    def javaHome8 = tool(name: 'JAVA 8', type: 'jdk')
+                    withEnv([
+                        "JAVA_HOME=${javaHome8}",
+                        "PATH+JAVA=${javaHome8}/bin"
+                    ]) {
+                        sh 'echo "Current JAVA_HOME: $JAVA_HOME"'
+                        sh 'java -version'
+                        
+                        // Your existing deploy script
+                        sh "./deploy.sh ${stageName}"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '🎉 Build, Sonar, and Deploy completed successfully!'
+        }
+        failure {
+            echo '❌ Build failed. Please check logs above.'
         }
     }
 }
