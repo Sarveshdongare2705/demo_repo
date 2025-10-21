@@ -15,11 +15,9 @@ pipeline {
                 echo "==== SONARQUBE ANALYSIS STAGE (Using Java 11) ===="
                 script {
                     def javaHome = tool name: 'JAVA 11', type: 'jdk'
-                    def actualJavaHome = "${javaHome}/jdk-11.0.0.2"
-
                     withEnv([
-                        "JAVA_HOME=${actualJavaHome}",
-                        "PATH+JAVA=${actualJavaHome}/bin"
+                        "JAVA_HOME=${javaHome}",
+                        "PATH+JAVA=${javaHome}/bin"
                     ]) {
                         echo ">>> Checking Java version in SonarQube stage..."
                         sh 'java -version'
